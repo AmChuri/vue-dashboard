@@ -10,7 +10,7 @@ To start the frontend, run:
 
 ```sh
 # install dependencies
-$ npm run install
+$ npm install
 
 # serve with hot reload at localhost:3000 (for development!)
 $ npm run dev
