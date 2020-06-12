@@ -1,4 +1,5 @@
 <template>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script> -->
   <div>
   <nav class="bg-gray-800">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -115,11 +116,46 @@
       <!-- Replace with your content -->
       <div class="px-4 py-6 sm:px-0">
         <div class="border-4 border-solid border-gray-200 rounded-lg h-auto">
-          
+          <div class="flex flex-row border-2 border-gray-100 p-2 h-auto m-auto bg-white shadow-lg  overflow-hidden">
+            <div class="m-2 w-4"> Code</div>
+            <div class="my-2 ml-5 w-5/6 text-center"> Error</div>
+          </div>
           <div>
-            <!-- Resolved: -->
-            <div v-for="error in resolved" :key="error.index">
-              <div class="flex flex-row border-2 border-gray-100 p-2 h-15 m-auto bg-white shadow-lg  overflow-hidden">
+          <!-- Unresolved: -->
+            <div v-for="(error,idx) in unresolved" :key="error.index" class="bg-white even:bg-gray-200">
+              <div class="flex flex-row border-2 border-gray-100 p-2 h-auto m-auto bg-white shadow-lg  overflow-hidden">
+                <div class="m-2 w-4">{{ error.code }}</div>  
+                <div class="m-2 w-4/6"> {{ error.text }}</div>
+                <div>
+                  <button v-on:click="changeError('unresolved',error.index,idx)" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded float-right">
+                      Mark as resolved
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        <div>
+            <!-- Resolved:  -->
+            <div v-for="(error,idx) in resolved" :key="error.index">
+              <div class="flex flex-row border-2 border-gray-100 p-2 h-auto m-auto bg-white shadow-lg  overflow-hidden">
+                <div class="m-2 w-4">{{ error.code }}</div>  
+                <div class="m-2 w-4/6"> {{ error.text }} </div>
+                <div>
+                  <button class="bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-4 border border-red-500 hover:border-transparent rounded float-right">
+                    Mark as Unresolved
+                  </button>
+                  <button v-if="error.undo" v-on:click="undoChange(error.prevArr, 'resolved',error.index,idx)" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded float-right">
+                    Undo
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+            <div>
+              <!-- Backlog: -->
+              <div v-for="error in backlog" :key="error.index">
+                <div class="flex flex-row border-2 border-gray-100 p-2 h-auto m-auto bg-white shadow-lg  overflow-hidden">
                 <div class="m-2 w-4">{{ error.code }}</div>  
                 <div class="m-2 w-5/6"> {{ error.text }} </div>
                 <div>
@@ -127,24 +163,38 @@
                     Button
                   </button>
                 </div>
+                </div>
               </div>
             </div>
-          </div>
-            <!-- <div>
-              Unresolved:
-              <div v-for="error in unresolved" :key="error.index">`{{ error.code }}` - {{ error.text }}</div>
-            </div>
-            <div>
-              Backlog:
-              <div v-for="error in backlog" :key="error.index">`{{ error.code }}` - {{ error.text }}</div>
-            </div> -->
         </div>
+       <!--  <div class="border-4 border-solid border-gray-200 rounded-lg h-screen overflow-y-scroll scrolling-touch">
+          <div class="flex flex-row border-2 border-gray-100 p-2 h-auto m-auto bg-white shadow-lg  overflow-hidden">
+            <div class="m-2 w-4"> Code</div>
+            <div class="my-2 ml-5 w-5/6 text-center"> Error</div>
+          </div>
+          <div>
+          <div v-for="error in unresolved" :key="error.index">
+              <div class="flex flex-row border-2 border-gray-100 p-2 h-auto m-auto bg-white shadow-lg  overflow-hidden">
+                <div class="m-2 w-4">{{ error.code }}</div>  
+                <div class="m-2 w-5/6"> {{ error.text }} </div>
+                <div>
+                  <button v-on:click="changeError('unresolved',error.index)" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded float-right">
+                      Button
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+            
+        </div> -->
       </div>
       <!-- /End replace -->
     </div>
   </main>
 </div>
 </template>
+
 
 <script>
 export default {
@@ -153,6 +203,7 @@ export default {
       let { resolved, unresolved, backlog } = await $axios.$get(
         "http://localhost:8000/get_lists"
       );
+      // console.log(unresolved);
       return {
         resolved,
         unresolved,
@@ -169,10 +220,50 @@ export default {
   },
   data() {
     return {
+
       resolved: [],
       unresolved: [],
-      backlog: []
+      backlog: [],
+      templateBox: []
+
     };
+  },
+  methods: {
+  changeError: function (typeError,errorID,idx) {
+    console.log("this was entered",typeError,errorID);
+
+    this.templateBox.push({
+      idx: this.unresolved[idx].index,
+      code: this.unresolved[idx].code,
+      text: this.unresolved[idx].text
+    })
+    this.pushToArray('resolved')
+    
+    this.unresolved.splice(idx,1);
+    // console.log(this.unresolved[indexnum].code);
+
+
+  },
+  pushToArray: function (destArray){
+
+    this.resolved.push({
+      index: this.resolved.length,
+      code: this.templateBox[0].code,
+      text: this.templateBox[0].text,
+      oldIdx : this.templateBox[0].idx,
+      prevArr: 'unresolved', 
+      undo : true
+    })
+    this.templateBox.pop();
+    // console.log(this.resolved);
+
+  },
+  undoChange: function(prevArr, currentArr, errorID, idx){
+    console.log(prevArr,currentArr,"lets change this",errorID,idx);
+    console.log(this.resolved[idx].oldIdx);
   }
+}
 };
+
+
 </script>
