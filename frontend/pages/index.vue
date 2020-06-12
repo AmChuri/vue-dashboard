@@ -115,7 +115,7 @@
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       <!-- Replace with your content -->
       <div class="px-4 py-6 sm:px-0">
-        <div class="border-4 border-solid border-gray-200 rounded-lg h-auto">
+        <div class="border-4 border-solid border-gray-200 rounded-lg h-screen overflow-y-scroll scrolling-touch">
           <div class="flex flex-row border-2 border-gray-100 p-2 h-auto m-auto bg-white shadow-lg  overflow-hidden">
             <div class="m-2 w-4"> Code</div>
             <div class="my-2 ml-5 w-5/6 text-center"> Error</div>
@@ -124,10 +124,19 @@
           <!-- Unresolved: -->
             <div v-for="(error,idx) in unresolved" :key="error.index" class="bg-white even:bg-gray-200">
               <div class="flex flex-row border-2 border-gray-100 p-2 h-auto m-auto bg-white shadow-lg  overflow-hidden">
+                <!-- <span class="flex rounded-full bg-green-500 uppercase px-2 py-0 text-xs font-bold m-auto h-auto justify-start">Resolved</span> -->
                 <div class="m-2 w-4">{{ error.code }}</div>  
-                <div class="m-2 w-4/6"> {{ error.text }}</div>
+                <div class="m-2 w-4/6"> {{ error.text }}{{ idx }} {{ error.index }}</div>
                 <div>
-                  <button v-on:click="changeError('unresolved',error.index,idx)" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded float-right">
+                  <!-- For backlog errors -->
+                  <button v-if="error.isbacklog" v-on:click="changeError('unresolved',idx)" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded float-right">
+                      Mark as resolved
+                  </button>
+                  <!-- if it was added from other list -->
+                  <button v-if="error.undo" v-on:click="undoChange(error.prevArr, 'unresolved',error.index,idx)" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded float-right ml-3">
+                    Undo
+                  </button>
+                  <button v-else v-on:click="changeError('unresolved',idx)" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded float-right">
                       Mark as resolved
                   </button>
                 </div>
@@ -135,59 +144,44 @@
 
             </div>
           </div>
+        </div>
+        <div class="border-4 border-solid border-gray-200 rounded-lg h-screen overflow-y-scroll scrolling-touch">
         <div>
             <!-- Resolved:  -->
             <div v-for="(error,idx) in resolved" :key="error.index">
               <div class="flex flex-row border-2 border-gray-100 p-2 h-auto m-auto bg-white shadow-lg  overflow-hidden">
                 <div class="m-2 w-4">{{ error.code }}</div>  
-                <div class="m-2 w-4/6"> {{ error.text }} </div>
+                <div class="m-2 w-4/6"> {{ error.text }} {{ idx }} {{ error.index }}</div>
                 <div>
-                  <button class="bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-4 border border-red-500 hover:border-transparent rounded float-right">
-                    Mark as Unresolved
-                  </button>
-                  <button v-if="error.undo" v-on:click="undoChange(error.prevArr, 'resolved',error.index,idx)" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded float-right">
+                  <!-- if it was added from other list -->
+                  <button v-if="error.undo" v-on:click="undoChange(error.prevArr, 'resolved',error.index,idx)" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded float-right ml-3">
                     Undo
                   </button>
+                  <button v-else v-on:click="changeError('resolved',idx)" class="bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-4 border border-red-500 hover:border-transparent rounded ">
+                    Mark as Unresolved
+                  </button>
+                  
                 </div>
               </div>
             </div>
           </div>
+        </div>
+        <div class="border-4 border-solid border-gray-200 rounded-lg h-screen overflow-y-scroll scrolling-touch">
             <div>
               <!-- Backlog: -->
-              <div v-for="error in backlog" :key="error.index">
+              <div v-for="(error,idx) in backlog" :key="error.index">
                 <div class="flex flex-row border-2 border-gray-100 p-2 h-auto m-auto bg-white shadow-lg  overflow-hidden">
                 <div class="m-2 w-4">{{ error.code }}</div>  
-                <div class="m-2 w-5/6"> {{ error.text }} </div>
+                <div class="m-2 w-4/6"> {{ error.text }} {{ idx }} {{ error.index }}</div>
                 <div>
-                  <button class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded float-right">
-                    Button
+                  <button v-on:click="changeError('backlog',idx)" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded float-right">
+                    Mark as Unresolved
                   </button>
                 </div>
                 </div>
               </div>
             </div>
         </div>
-       <!--  <div class="border-4 border-solid border-gray-200 rounded-lg h-screen overflow-y-scroll scrolling-touch">
-          <div class="flex flex-row border-2 border-gray-100 p-2 h-auto m-auto bg-white shadow-lg  overflow-hidden">
-            <div class="m-2 w-4"> Code</div>
-            <div class="my-2 ml-5 w-5/6 text-center"> Error</div>
-          </div>
-          <div>
-          <div v-for="error in unresolved" :key="error.index">
-              <div class="flex flex-row border-2 border-gray-100 p-2 h-auto m-auto bg-white shadow-lg  overflow-hidden">
-                <div class="m-2 w-4">{{ error.code }}</div>  
-                <div class="m-2 w-5/6"> {{ error.text }} </div>
-                <div>
-                  <button v-on:click="changeError('unresolved',error.index)" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded float-right">
-                      Button
-                  </button>
-                </div>
-              </div>
-
-            </div>
-          </div>
-            
-        </div> -->
       </div>
       <!-- /End replace -->
     </div>
@@ -229,38 +223,157 @@ export default {
     };
   },
   methods: {
-  changeError: function (typeError,errorID,idx) {
-    console.log("this was entered",typeError,errorID);
+  changeError: function (typeError,idx) {
+    console.log("this was entered",typeError,idx);
 
-    this.templateBox.push({
-      idx: this.unresolved[idx].index,
-      code: this.unresolved[idx].code,
-      text: this.unresolved[idx].text
-    })
-    this.pushToArray('resolved')
+    //create template object to be pushed to new list
+    this.createTemplate(typeError,idx);
+    if (typeError == 'unresolved'){
+      this.pushToArray('unresolved','resolved',true);
+    }
+    else{
+      this.pushToArray(typeError,'unresolved',true);
+    }
     
-    this.unresolved.splice(idx,1);
-    // console.log(this.unresolved[indexnum].code);
+    //remove the source array once pushed to new array
+    this.spliceList(typeError,idx);
 
 
   },
-  pushToArray: function (destArray){
-
-    this.resolved.push({
-      index: this.resolved.length,
+  pushToArray: function (sourceList,destList, undoVal){
+    /**destArray to which array is the error code pushed to
+    unresolved (sourceList) -> resolved (destList)
+    undoVal to set undoval whther we are marking it or undoing it**/
+    if(destList=='resolved'){
+      // query came from unresolved
+      this.resolved.push({
+      index: this.templateBox[0].idx,
       code: this.templateBox[0].code,
       text: this.templateBox[0].text,
-      oldIdx : this.templateBox[0].idx,
       prevArr: 'unresolved', 
-      undo : true
+      undo : undoVal
     })
+    }
+    else if(destList == 'unresolved' && sourceList =='resolved'){
+      //query is for unreolved and came from resolve list
+      this.unresolved.push({
+      index: this.templateBox[0].idx,
+      code: this.templateBox[0].code,
+      text: this.templateBox[0].text,
+      prevArr: 'resolved', 
+      undo : undoVal
+    })
+    }
+    else if(destList == 'unresolved' && sourceList =='backlog'){
+      //query is for unreolved and came from resolve list
+      this.unresolved.push({
+      index: this.templateBox[0].idx,
+      code: this.templateBox[0].code,
+      text: this.templateBox[0].text,
+      prevArr: 'backlog', 
+      undo : undoVal,
+      isbacklog: true
+    })
+    }
+    
     this.templateBox.pop();
     // console.log(this.resolved);
 
   },
   undoChange: function(prevArr, currentArr, errorID, idx){
     console.log(prevArr,currentArr,"lets change this",errorID,idx);
-    console.log(this.resolved[idx].oldIdx);
+    if(prevArr=='unresolved'){
+    this.templateBox.pop();
+    this.templateBox.push({
+      index: this.resolved[idx].index,
+      code: this.resolved[idx].code,
+      text: this.resolved[idx].text,
+    })
+    var closest = this.getClosest('unresolved',this.resolved[idx].index);
+    //add to unresolved list
+    this.unresolved.splice(closest,0,this.templateBox[0]);
+    this.resolved.splice(idx,1);
+    }
+  },
+  getClosest: function(arrToCheck, idx){
+    /** while undoing the changes we need to put the object in its previous list where is belongs for that we try to find the closest index in that list for the object 
+    arrToCheck -> previous list to be checked for undoing
+    idx -> original index of the object when it was present in that list**/
+    if (arrToCheck=='unresolved'){
+      for(var i =0; i < this.unresolved.length; i++){
+        if(Math.abs(this.unresolved[i].index)>idx){
+          return i;break;
+        }
+      }
+      //if last element was selected since loop wont enter this length.
+      return this.unresolved.length;
+    }
+    else if (arrToCheck=='resolved'){
+      for(var i =0; i < this.resolved.length; i++){
+        if(Math.abs(this.resolved[i].index)>idx){
+          return i;break;
+        }
+      }
+      //if last element was selected since loop wont enter this length.
+      return this.resolved.length;
+    }
+    else if (arrToCheck=='backlog'){
+      for(var i =0; i < this.backlog.length; i++){
+        if(Math.abs(this.backlog[i].index)>idx){
+          return i;break;
+        }
+      }
+      //if last element was selected since loop wont enter this length.
+      return this.backlog.length;
+    }
+    //end of if elseif
+  },
+  createTemplate: function(sourceArr,idx){
+  /** Function creates object which needs to be transfered **/
+  /** sourceArr -> object to be copied from
+      idx -> index of the objec **/
+    this.templateBox.pop(); // empty templatebox
+    try {
+      if(sourceArr=='unresolved'){
+        this.templateBox.push({
+          idx: this.unresolved[idx].index,
+          code: this.unresolved[idx].code,
+          text: this.unresolved[idx].text
+        })
+      }
+      else if(sourceArr=='resolved'){
+        this.templateBox.push({
+          idx: this.resolved[idx].index,
+          code: this.resolved[idx].code,
+          text: this.resolved[idx].text
+        })
+      }
+      else if(sourceArr=='backlog'){
+        this.templateBox.push({
+          idx: this.backlog[idx].index,
+          code: this.backlog[idx].code,
+          text: this.backlog[idx].text
+        })
+        console.log(this.templateBox,this.backlog[idx])
+      }
+    }catch (error) {
+      console.log("Please check your source array something went wrong.");
+    }
+  },
+  spliceList: function(sourceArr,idx){
+    /** to remove the object from list when its status has changed
+    // sourceArr -> list from which object to be removed
+      idx-> index of the object in the list
+    **/
+    if(sourceArr == 'unresolved'){
+      this.unresolved.splice(idx,1);
+    }
+    else if(sourceArr == 'resolved'){
+      this.resolved.splice(idx,1);
+    }
+    else if(sourceArr == 'backlog'){
+      this.backlog.splice(idx,1);
+    }
   }
 }
 };

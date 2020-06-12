@@ -6,7 +6,7 @@ from typing import Any, Dict
 from fastapi import FastAPI
 import uvicorn
 
-ERROR_CODES = [c for c in range(50)]
+ERROR_CODES = [c for c in range(10)]
 LOGGER = logging.getLogger("API")
 app = FastAPI()
 
@@ -21,17 +21,17 @@ def generate_lists() -> Dict[str, Any]:
             'index': error_idx,
             'code': random.choice(ERROR_CODES),
             'text': 'Error ABC occured, that is `resolved`'
-        } for error_idx in range(50)],
+        } for error_idx in range(10)],
         'unresolved': [{
             'index': error_idx,
             'code': random.choice(ERROR_CODES),
             'text': 'Error DEF occured, that is `unresolved`'
-        } for error_idx in range(50, 100)],
+        } for error_idx in range(10, 20)],
         'backlog': [{
             'index': error_idx,
             'code': random.choice(ERROR_CODES),
             'text': 'Error XYZ occured, that is in the `backlog`'
-        } for error_idx in range(100, 150)]
+        } for error_idx in range(20, 30)]
     }
 
 
