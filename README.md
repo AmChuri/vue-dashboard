@@ -28,7 +28,7 @@ Please check all tasks that you completed. Please document everything that shoul
 
 _frontend_
 
-- [ ] Write a UI that allows the operator to:
+- [x] Write a UI that allows the operator to:
   - [x] have an "nice" overview of all errors, it should show `unresolved`, then `resolved` and then `backlog` errors
   - [x] see the `text` and `code` of each error
   - [x] resolve each individual `unresolved` error by clicking an individual button
@@ -46,7 +46,7 @@ _frontend version two_
   - [x] notifications (Works in dropdown didn't implement browser pop ups properly)
   - [x] mobile layout  (Partially completed Needs to do integration testing for the same)
   - [ ] ...
-- [ ] make the undo functionality better
+- [x] make the undo functionality better
   - [x] the user should be able to undo _all_ of his actions
   - [x] when a user clicks undo, the item that switches lists should be in the same position as before (e.g., if the user resolved an error that was in the middle of the list at position 4, it should also re-appear at position 4 if he undoes this action)
 
@@ -61,6 +61,8 @@ Note: These are in no particular order, start and do whatever you like. If you h
 If you have an additional idea, that would bring our operators forward and is not on this stretch goal list, please feel free to implement that as well, or even just write about it in this or some other file. We also love people that think about their tasks and are able to think like the people whose problems they solve.
 
 ## Screenshots
+![alt text](https://github.com/kingman21/vue-dashboard/blob/master/screenshots/frontend.png?raw=true)
+
 
 Some screenshots to get you started/so that you know, that you're on the right path.
 
