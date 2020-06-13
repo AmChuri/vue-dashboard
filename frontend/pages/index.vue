@@ -26,16 +26,16 @@
                 </button>
                 <button v-if="showNotification" @click="showNotification = false" tabindex = "-1" class="fixed inset-0 w-full h-full bg-black opacity-50 cursor-default"></button>
               </div>
-              <div v-if="showNotification" class="origin-top-right absolute right-0 mt-2 w-auto inline-block rounded-md shadow-lg">
+              <div v-if="showNotification" class="origin-top-right absolute right-0 mt-2 w-screen max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl rounded-md shadow-lg">
                 <div class="py-1 rounded-md bg-white shadow-xs" role="menu" aria-orientation="vertical" aria-labelledby="user-notification">
-                  <div v-if="notificationlist.length>0" v-for="notification in notificationlist" :key="notification" class="bg-white even:bg-gray-200">
+                  <div v-if="Math.abs(notificationlist.length) > 0" v-for="notification in notificationlist" :key="notification.index" class="bg-white even:bg-gray-200">
                     <div class="flex flex-row border-2 border-gray-100 p-2 h-auto m-auto bg-white shadow-lg  overflow-hidden">
                       <div class="m-2">{{ notification.text }}</div>  
                     </div>
                   </div>
                   <div v-else class="bg-white even:bg-gray-200">
                     <div class="flex flex-row border-2 border-gray-100 p-2 h-auto m-auto bg-white shadow-lg  overflow-hidden">
-                      <div class="m-2">Notifications right now!</div>  
+                      <div class="m-2">Notifications right now! ajao</div>  
                     </div>
                   </div>
                 </div>
@@ -133,7 +133,7 @@
               <div class="flex flex-row border-2 border-gray-100 p-2 h-auto m-auto bg-white shadow-lg  overflow-hidden">
                 <!-- <span class="flex rounded-full bg-green-500 uppercase px-2 py-0 text-xs font-bold m-auto h-auto justify-start">Resolved</span> -->
                 <div class="m-2 w-4">{{ error.code }}</div>  
-                <div class="m-2 w-4/6"> {{ error.text }}{{ idx }} {{ error.index }}</div>
+                <div class="m-2 w-4/6"> {{ error.text }}</div>
                 <div>
                   
                   <!-- if it was added from other list -->
@@ -170,7 +170,7 @@
             <div v-for="(error,idx) in resolved" :key="error.index">
               <div class="flex flex-row border-2 border-gray-100 p-2 h-auto m-auto bg-white shadow-lg  overflow-hidden">
                 <div class="m-2 w-4">{{ error.code }}</div>  
-                <div class="m-2 w-4/6"> {{ error.text }} {{ idx }} {{ error.index }}</div>
+                <div class="m-2 w-4/6"> {{ error.text }}</div>
                 <div>
                   <!-- if it was added from other list -->
                   <button v-if="error.undo" v-on:click="undoChange(error.prevArr, 'resolved',error.index,idx)" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded float-right ml-3">
@@ -203,7 +203,7 @@
               <div v-for="(error,idx) in backlog" :key="error.index">
                 <div class="flex flex-row border-2 border-gray-100 p-2 h-auto m-auto bg-white shadow-lg  overflow-hidden">
                 <div class="m-2 w-4">{{ error.code }}</div>  
-                <div class="m-2 w-4/6"> {{ error.text }} {{ idx }} {{ error.index }}</div>
+                <div class="m-2 w-4/6"> {{ error.text }}</div>
                 <div>
                   <button v-on:click="changeError('backlog',idx)" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded float-right">
                     Mark as Unresolved
@@ -479,6 +479,7 @@ export default {
   },
   addNotification: function(sourceArr,destArr,idx){
     this.notificationlist.push({
+      index:this.notificationlist.length,
       text:"Error code "+idx+" was moved from "+sourceArr+" to "+destArr,
       timestamp: new Date()
     })
