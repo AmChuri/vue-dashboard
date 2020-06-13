@@ -28,6 +28,7 @@ export default {
   ** Plugins to load before mounting the App
   */
   plugins: [
+   {src: '~/plugins/vue-notification.js', ssr: false}
   ],
   /*
   ** Nuxt.js dev-modules
@@ -42,12 +43,20 @@ export default {
   modules: [
     // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
+    '@nuxtjs/proxy'
   ],
   /*
   ** Axios module configuration
   ** See https://axios.nuxtjs.org/options
   */
   axios: {
+    proxy:true
+  },
+  /*
+  ** Proxy configuration
+  */
+  proxy: {
+
   },
   /*
   ** Build configuration

@@ -12,10 +12,13 @@
   },
   "dependencies": {
     "@nuxtjs/axios": "^5.10.3",
+    "@nuxtjs/proxy": "^2.0.0",
     "@tailwindcss/ui": "^0.3.0",
+    "mini-toastr": "^0.8.1",
     "nuxt": "^2.12.2",
     "tailwindcss": "^1.4.6",
     "vue": "^2.6.11",
+    "vue-notifications": "^1.0.2",
     "vue-server-renderer": "^2.6.11"
   },
   "devDependencies": {
