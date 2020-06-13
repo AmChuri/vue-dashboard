@@ -128,15 +128,16 @@
                 <div class="m-2 w-4">{{ error.code }}</div>  
                 <div class="m-2 w-4/6"> {{ error.text }}{{ idx }} {{ error.index }}</div>
                 <div>
-                  <!-- For backlog errors -->
-                  <button v-if="error.isbacklog" v-on:click="changeError('unresolved',idx)" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded float-right">
-                      Mark as resolved
-                  </button>
+                  
                   <!-- if it was added from other list -->
                   <button v-if="error.undo" v-on:click="undoChange(error.prevArr, 'unresolved',error.index,idx)" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded float-right ml-3">
                     Undo
                   </button>
                   <button v-else v-on:click="changeError('unresolved',idx)" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded float-right">
+                      Mark as resolved
+                  </button>
+                  <!-- For backlog errors -->
+                  <button v-if="error.isbacklog" v-on:click="changeError('unresolved',idx)" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded float-right">
                       Mark as resolved
                   </button>
                 </div>
@@ -197,7 +198,6 @@ export default {
       let { resolved, unresolved, backlog } = await $axios.$get(
         "http://localhost:8000/get_lists"
       );
-      // console.log(unresolved);
       return {
         resolved,
         unresolved,
@@ -218,162 +218,208 @@ export default {
       resolved: [],
       unresolved: [],
       backlog: [],
-      templateBox: []
+      templateBox: [],
+      backlogidx: []
 
     };
   },
+  created(){
+    //collect all backlog indexes which we use in future for undoing
+    this.collectBacklogIdx();
+  },
   methods: {
-  changeError: function (typeError,idx) {
-    console.log("this was entered",typeError,idx);
+    collectBacklogIdx: function(){
+      for(var i = 0; i< this.backlog.length;i++){
+        this.backlogidx.push(this.backlog[i].index);
+      }
+    },
+    changeError: function (typeError,idx) {
+      //changeError gets triggered when change error btn is clicked
+      // console.log("this was entered",typeError,idx);
 
-    //create template object to be pushed to new list
-    this.createTemplate(typeError,idx);
-    if (typeError == 'unresolved'){
-      this.pushToArray('unresolved','resolved',true);
-    }
-    else{
-      this.pushToArray(typeError,'unresolved',true);
-    }
-    
-    //remove the source array once pushed to new array
-    this.spliceList(typeError,idx);
+      //create template object to be pushed to new list
+      this.createTemplate(typeError,idx,true);
+      if (typeError == 'unresolved'){
+        this.pushToArray('unresolved','resolved');
+      }
+      else{
+        this.pushToArray(typeError,'unresolved');
+      }
+      
+      // console.log(this.unresolved,this.resolved,this.backlog)
+      //remove the source array once pushed to new array
+      this.spliceList(typeError,idx);
 
 
-  },
-  pushToArray: function (sourceList,destList, undoVal){
-    /**destArray to which array is the error code pushed to
-    unresolved (sourceList) -> resolved (destList)
-    undoVal to set undoval whther we are marking it or undoing it**/
-    if(destList=='resolved'){
-      // query came from unresolved
-      this.resolved.push({
-      index: this.templateBox[0].idx,
-      code: this.templateBox[0].code,
-      text: this.templateBox[0].text,
-      prevArr: 'unresolved', 
-      undo : undoVal
-    })
-    }
-    else if(destList == 'unresolved' && sourceList =='resolved'){
-      //query is for unreolved and came from resolve list
-      this.unresolved.push({
-      index: this.templateBox[0].idx,
-      code: this.templateBox[0].code,
-      text: this.templateBox[0].text,
-      prevArr: 'resolved', 
-      undo : undoVal
-    })
-    }
-    else if(destList == 'unresolved' && sourceList =='backlog'){
-      //query is for unreolved and came from resolve list
-      this.unresolved.push({
-      index: this.templateBox[0].idx,
-      code: this.templateBox[0].code,
-      text: this.templateBox[0].text,
-      prevArr: 'backlog', 
-      undo : undoVal,
-      isbacklog: true
-    })
-    }
-    
-    this.templateBox.pop();
-    // console.log(this.resolved);
 
-  },
-  undoChange: function(prevArr, currentArr, errorID, idx){
-    console.log(prevArr,currentArr,"lets change this",errorID,idx);
-    if(prevArr=='unresolved'){
-    this.templateBox.pop();
-    this.templateBox.push({
-      index: this.resolved[idx].index,
-      code: this.resolved[idx].code,
-      text: this.resolved[idx].text,
-    })
-    var closest = this.getClosest('unresolved',this.resolved[idx].index);
-    //add to unresolved list
-    this.unresolved.splice(closest,0,this.templateBox[0]);
-    this.resolved.splice(idx,1);
-    }
-  },
-  getClosest: function(arrToCheck, idx){
-    /** while undoing the changes we need to put the object in its previous list where is belongs for that we try to find the closest index in that list for the object 
-    arrToCheck -> previous list to be checked for undoing
-    idx -> original index of the object when it was present in that list**/
-    if (arrToCheck=='unresolved'){
-      for(var i =0; i < this.unresolved.length; i++){
-        if(Math.abs(this.unresolved[i].index)>idx){
-          return i;break;
+    },
+    pushToArray: function (sourceList,destList){
+      /**destArray to which array is the error code pushed to
+      unresolved (sourceList) -> resolved (destList)
+      undoVal to set undoval whther we are marking it or undoing it**/
+      if(destList=='resolved'){
+        // query came from unresolved
+        this.resolved.push({
+        index:    this.templateBox[0].index,
+        code:     this.templateBox[0].code,
+        text:     this.templateBox[0].text,
+        prevArr:  'unresolved', 
+        undo :    this.templateBox[0].undo,
+        isbacklog:this.isExist(this.templateBox[0].index)
+      })
+      }
+      else if(destList == 'unresolved' && sourceList =='resolved'){
+        //query is for unresolved and came from resolve list
+        var preArrVal = this.isExist(this.templateBox[0].index)? 'backlog' :'resolved';
+        this.unresolved.push({
+        index:    this.templateBox[0].index,
+        code:     this.templateBox[0].code,
+        text:     this.templateBox[0].text,
+        prevArr:  preArrVal, 
+        undo :    this.templateBox[0].undo,
+        isbacklog:this.isExist(this.templateBox[0].index)
+      })
+      }
+      else if(destList == 'unresolved' && sourceList =='backlog'){
+        //query is for unreolved and came from resolve list
+        this.unresolved.push({
+        index:    this.templateBox[0].index,
+        code:     this.templateBox[0].code,
+        text:     this.templateBox[0].text,
+        prevArr:  'backlog', 
+        undo :    this.templateBox[0].undo,
+        isbacklog:this.isExist(this.templateBox[0].index)
+      })
+      }
+      
+      this.templateBox.pop();
+      // console.log(this.resolved);
+
+    },
+    undoChange: function(prevArr, currentArr, errorID, idx){
+      // console.log(prevArr,currentArr,"lets change this",errorID,idx);
+      if(prevArr=='unresolved'){
+        //only values from resolved can be undone to unresolve
+        var undoVal = this.isExist(this.resolved[idx].index) ? true : false ;
+        this.createTemplate(currentArr,idx, undoVal);
+        if (undoVal){
+          //we are not setting prevall value for backlogs
+          this.templateBox[0].prevArr = 'backlog';
         }
+
+        //find the closest element is list while undoing
+        var closest = this.getClosest('unresolved',this.resolved[idx].index);
+        //add to unresolved list
+        this.unresolved.splice(closest,0,this.templateBox[0]);
+        
       }
-      //if last element was selected since loop wont enter this length.
-      return this.unresolved.length;
-    }
-    else if (arrToCheck=='resolved'){
-      for(var i =0; i < this.resolved.length; i++){
-        if(Math.abs(this.resolved[i].index)>idx){
-          return i;break;
+      else if(prevArr=='resolved'){
+        var undoVal = this.isExist(this.unresolved[idx].index) ? true : false ;
+        this.createTemplate(currentArr,idx, undoVal);
+        var closest = this.getClosest('resolved',this.unresolved[idx].index);
+        this.resolved.splice(closest,0,this.templateBox[0]);
+      }
+      else if(prevArr=='backlog'){
+        var undoVal = this.isExist(this.unresolved[idx].index) ? true : false ;
+        this.createTemplate(currentArr,idx, undoVal);
+        var closest = this.getClosest('backlog',this.unresolved[idx].index);
+        this.backlog.splice(closest,0,this.templateBox[0]);
+      }
+      this.spliceList(currentArr,idx);
+    },
+    getClosest: function(arrToCheck, idx){
+      /** while undoing the changes we need to put the object in its previous list where is belongs for that we try to find the closest index in that list for the object 
+      arrToCheck -> previous list to be checked for undoing
+      idx -> original index of the object when it was present in that list**/
+      if (arrToCheck=='unresolved'){
+        for(var i =0; i < this.unresolved.length; i++){
+          if(Math.abs(this.unresolved[i].index)>idx){
+            return i;break;
+          }
         }
+        //if last element was selected since loop wont enter this length.
+        return this.unresolved.length;
       }
-      //if last element was selected since loop wont enter this length.
-      return this.resolved.length;
-    }
-    else if (arrToCheck=='backlog'){
-      for(var i =0; i < this.backlog.length; i++){
-        if(Math.abs(this.backlog[i].index)>idx){
-          return i;break;
+      else if (arrToCheck=='resolved'){
+        for(var i =0; i < this.resolved.length; i++){
+          if(Math.abs(this.resolved[i].index)>idx){
+            return i;break;
+          }
         }
+        //if last element was selected since loop wont enter this length.
+        return this.resolved.length;
       }
-      //if last element was selected since loop wont enter this length.
-      return this.backlog.length;
-    }
-    //end of if elseif
-  },
-  createTemplate: function(sourceArr,idx){
-  /** Function creates object which needs to be transfered **/
-  /** sourceArr -> object to be copied from
-      idx -> index of the objec **/
-    this.templateBox.pop(); // empty templatebox
-    try {
-      if(sourceArr=='unresolved'){
-        this.templateBox.push({
-          idx: this.unresolved[idx].index,
-          code: this.unresolved[idx].code,
-          text: this.unresolved[idx].text
-        })
+      else if (arrToCheck=='backlog'){
+        for(var i =0; i < this.backlog.length; i++){
+          if(Math.abs(this.backlog[i].index)>idx){
+            return i;break;
+          }
+        }
+        //if last element was selected since loop wont enter this length.
+        return this.backlog.length;
       }
-      else if(sourceArr=='resolved'){
-        this.templateBox.push({
-          idx: this.resolved[idx].index,
-          code: this.resolved[idx].code,
-          text: this.resolved[idx].text
-        })
+      //end of if elseif
+    },
+    createTemplate: function(sourceArr,idx,undoVal){
+    /** Function creates object which needs to be transfered **/
+    /** sourceArr -> object to be copied from
+        idx -> index of the objec **/
+      this.templateBox.pop(); // empty templatebox
+      try {
+        if(sourceArr=='unresolved'){
+          this.templateBox.push({
+            index: this.unresolved[idx].index,
+            code: this.unresolved[idx].code,
+            text: this.unresolved[idx].text,
+            undo: undoVal,
+            isbacklog: this.isExist(this.unresolved[idx].index)
+          })
+        }
+        else if(sourceArr=='resolved'){
+          this.templateBox.push({
+            index: this.resolved[idx].index,
+            code: this.resolved[idx].code,
+            text: this.resolved[idx].text,
+            undo: undoVal,
+            isbacklog: this.isExist(this.resolved[idx].index)
+          })
+        }
+        else if(sourceArr=='backlog'){
+          this.templateBox.push({
+            index: this.backlog[idx].index,
+            code: this.backlog[idx].code,
+            text: this.backlog[idx].text,
+            undo: undoVal,
+            isbacklog: this.isExist(this.backlog[idx].index)
+          })
+        }
+      }catch (error) {
+        console.log("Please check your source array something went wrong.");
       }
-      else if(sourceArr=='backlog'){
-        this.templateBox.push({
-          idx: this.backlog[idx].index,
-          code: this.backlog[idx].code,
-          text: this.backlog[idx].text
-        })
-        console.log(this.templateBox,this.backlog[idx])
+    },
+    spliceList: function(sourceArr,idx){
+      /** to remove the object from list when its status has changed
+      // sourceArr -> list from which object to be removed
+        idx-> index of the object in the list
+      **/
+      if(sourceArr == 'unresolved'){
+        this.unresolved.splice(idx,1);
       }
-    }catch (error) {
-      console.log("Please check your source array something went wrong.");
+      else if(sourceArr == 'resolved'){
+        this.resolved.splice(idx,1);
+      }
+      else if(sourceArr == 'backlog'){
+        this.backlog.splice(idx,1);
+      }
+    },
+    isExist: function(idx){
+      for(var i =0; i < this.backlogidx.length; i++){
+        if(Math.abs(this.backlogidx[i]) == Math.abs(idx)){
+          return true;
+          break;
+        }
     }
-  },
-  spliceList: function(sourceArr,idx){
-    /** to remove the object from list when its status has changed
-    // sourceArr -> list from which object to be removed
-      idx-> index of the object in the list
-    **/
-    if(sourceArr == 'unresolved'){
-      this.unresolved.splice(idx,1);
-    }
-    else if(sourceArr == 'resolved'){
-      this.resolved.splice(idx,1);
-    }
-    else if(sourceArr == 'backlog'){
-      this.backlog.splice(idx,1);
-    }
+    return false
   }
 }
 };
